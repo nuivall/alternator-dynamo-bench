@@ -70,6 +70,30 @@ resource "aws_instance" "loader" {
     Owner = "Benchmarking"
     NodeType = "loader"
   }
+
+  iam_instance_profile = aws_iam_instance_profile.dynamo_profile.name
+}
+
+resource "aws_iam_role" "dynamo_role" {
+  name               = "dynamo_role"
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"]
+  assume_role_policy = data.aws_iam_policy_document.dynamo_policy.json
+}
+
+resource "aws_iam_instance_profile" "dynamo_profile" {
+  name = "dynamo_profile"
+  role = aws_iam_role.dynamo_role.name
+}
+
+data "aws_iam_policy_document" "dynamo_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
 
 # This runs provisioning steps
@@ -115,4 +139,21 @@ resource "null_resource" "loader" {
 		destination = "/opt/scylla"
 	}
 
+}
+
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name     = "usertable"
+  hash_key = "p"
+  attribute {
+    name = "p"
+    type = "S"
+  }
+
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 20
+  write_capacity = 20
+
+  tags = {
+    Owner = "Benchmarking"
+  }
 }

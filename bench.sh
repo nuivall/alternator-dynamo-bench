@@ -25,8 +25,8 @@ fieldlength="${fieldlength:-'256'}"
 time="${time:-'300'}"
 
 # Binary path on a loader machines
-YCSB_DIR='/opt/scylla/ycsb-dynamodb-binding-0.17.0'
-YCSB=${YCSB_DIR}'/bin/ycsb'
+YCSB_DIR='/opt/scylla/ycsb-dynamodb-binding-0.18.0-fixed'
+YCSB=${YCSB_DIR}'/bin/ycsb.sh'
 
 loaders_json=(`terraform output -json loader_public_ips`)
 readarray -t loaders < <(jq -r '.[]' <<<"$loaders_json")
@@ -79,6 +79,7 @@ do
             # partition and all the items in it. The HASH_AND_RANGE mode is
             # worthless for benchmarking because it has a single hot
             # partition.
+            ${SCRIPTPATH}/ec2-ssh $loader "chmod +x $YCSB"
             ${SCRIPTPATH}/ec2-ssh $loader "$YCSB run dynamodb -P $YCSB_DIR/workloads/workloada -threads 100 \
             ${target} \
             -p recordcount=1000000 \

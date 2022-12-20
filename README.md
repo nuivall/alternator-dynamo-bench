@@ -15,7 +15,7 @@
 # Benchmarking DynamoDB
 
 1. Run `terraform apply -auto-approve -target=module.dynamodb` to provision table
-2. Run `bench.sh`
+2. Run `./bench.sh`
 3. Run `terraform destroy -auto-approve -target=module.dynamodb` to delete table
 
 # Benchmarking Alternator

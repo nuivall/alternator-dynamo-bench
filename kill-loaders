@@ -1,0 +1,16 @@
+#!/bin/bash
+
+loaders_json=(`terraform output -json loader_public_ips`)
+readarray -t loaders < <(jq -r '.[]' <<<"$loaders_json")
+declare -p loaders
+
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+# TODO: improve
+
+for loader in ${loaders[@]}
+do
+    ${SCRIPTPATH}/ec2-ssh $loader pkill -KILL -f java &
+done
+# After spawning all the ssh's in parallel, we wait for all of them to finish.
+wait
