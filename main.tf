@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region                   = "us-east-1"
+  region                   = var.aws_region
   shared_credentials_files = ["$HOME/.aws/credentials"]
 }
 
@@ -58,7 +58,7 @@ data "aws_ami" "ubuntu" {
 # Instances which run ycsb
 resource "aws_instance" "loader" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
+  instance_type = var.loader_instance_type
   key_name = random_string.key_name.result
 
   count = var.loader_instances_count
@@ -68,6 +68,7 @@ resource "aws_instance" "loader" {
   tags = {
     Name = "Loader"
     Owner = "Benchmarking"
+    NodeType = "loader"
   }
 }
 
@@ -76,6 +77,8 @@ resource "null_resource" "loader" {
   # Changes to any instance requires re-provisioning
   triggers = {
     loader_instance_ids = join(",", aws_instance.loader.*.id)
+    # Use code below to force recreating null_resource
+    # always_run = "${timestamp()}"
   }
 
   count = var.loader_instances_count
@@ -96,9 +99,19 @@ resource "null_resource" "loader" {
     ]
   }
 
+  # Install dependecies needed for ycsb
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update",
+      "sudo apt install -y python2",
+      "sudo ln -s /usr/bin/python2 /usr/bin/python",
+      "sudo apt install -y default-jre"
+    ]
+  }
+
   # Copy opt directory containing executables
 	provisioner "file" {
-    source = "scylla/"
+    source = "opt/"
 		destination = "/opt/scylla"
 	}
 

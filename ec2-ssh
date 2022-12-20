@@ -1,0 +1,6 @@
+#!/bin/sh
+ARGS=
+case $1 in
+-t) ARGS=$1; shift;;
+esac
+ssh $ARGS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o IdentityFile=./private_key -o IdentitiesOnly=yes ubuntu@"$@"
