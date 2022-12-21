@@ -23,6 +23,8 @@ wcu="${wcu:-}"
 fieldcount="${fieldcount:-'10'}"
 fieldlength="${fieldlength:-'256'}"
 time="${time:-'300'}"
+recordcount="${recordcount:-1000000}"
+
 
 # Binary path on a loader machines
 YCSB_DIR='/opt/scylla/ycsb-dynamodb-binding-0.18.0-fixed'
@@ -82,8 +84,8 @@ do
             ${SCRIPTPATH}/ec2-ssh $loader "chmod +x $YCSB"
             ${SCRIPTPATH}/ec2-ssh $loader "$YCSB run dynamodb -P $YCSB_DIR/workloads/workloada -threads 100 \
             ${target} \
-            -p recordcount=1000000 \
-            -p insertstart=$((i*1000000 )) \
+            -p recordcount=${recordcount} \
+            -p insertstart=$((i*${recordcount})) \
             -p requestdistribution=uniform \
             -p fieldcount=${fieldcount} \
             -p fieldlength=${fieldlength} \

@@ -139,6 +139,7 @@ resource "null_resource" "loader" {
 }
 
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  count = var.create_dynamo_table ? 1 : 0
   name     = "usertable"
   hash_key = "p"
   attribute {
@@ -147,8 +148,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   billing_mode   = "PROVISIONED"
-  read_capacity  = 20
-  write_capacity = 20
+  read_capacity  = 1000
+  write_capacity = 1000
 
   tags = {
     Owner = "Benchmarking"

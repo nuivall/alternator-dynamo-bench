@@ -20,3 +20,8 @@ variable "loader_instance_type" {
 variable "loader_instances_count" {
 	default = 3
 }
+
+# This should be on when testing dynamoDB but it's not needed for alternator
+variable "create_dynamo_table" {
+	default = true
+}
