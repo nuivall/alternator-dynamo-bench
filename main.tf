@@ -102,7 +102,7 @@ resource "null_resource" "loader" {
   triggers = {
     loader_instance_ids = join(",", aws_instance.loader.*.id)
     # Use code below to force recreating null_resource
-    # always_run = "${timestamp()}"
+    always_run = "${timestamp()}"
   }
 
   count = var.loader_instances_count
@@ -123,21 +123,18 @@ resource "null_resource" "loader" {
     ]
   }
 
-  # Install dependecies needed for ycsb
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update",
-      "sudo apt install -y python2",
-      "sudo ln -s /usr/bin/python2 /usr/bin/python",
-      "sudo apt install -y default-jre"
-    ]
-  }
-
   # Copy opt directory containing executables
 	provisioner "file" {
     source = "opt/"
 		destination = "/opt/scylla"
 	}
+
+  # Install dependecies needed for ycsb
+  provisioner "remote-exec" {
+    inline = [
+      "sudo /opt/scylla/deps.sh &"
+    ]
+  }
 
 }
 
