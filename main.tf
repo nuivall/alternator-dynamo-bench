@@ -131,7 +131,7 @@ resource "null_resource" "loader" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo /opt/scylla/deps.sh &"
+      "sudo bash -C /opt/scylla/deps.sh"
     ]
   }
 
