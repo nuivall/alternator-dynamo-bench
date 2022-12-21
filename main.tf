@@ -112,7 +112,7 @@ resource "null_resource" "loader" {
     host = element(aws_instance.loader.*.public_ip, count.index)
     user = "ubuntu"
     private_key = tls_private_key.ssh_key.private_key_openssh
-    timeout = "30s"
+    timeout = "1m"
   }
 
   # Make ubuntu user owning our binaries
@@ -128,7 +128,7 @@ resource "null_resource" "loader" {
     source = "opt/deps.sh"
 		destination = "/opt/scylla/deps.sh"
 	}
-  
+
   provisioner "remote-exec" {
     inline = [
       "sudo /opt/scylla/deps.sh &"
