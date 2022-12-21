@@ -14,7 +14,7 @@ variable "loader_avaliability_zones" {
 }
 
 variable "loader_instance_type" {
-  default = "t2.micro"
+  default = "t3.micro"
 }
 
 variable "loader_instances_count" {
