@@ -123,19 +123,23 @@ resource "null_resource" "loader" {
     ]
   }
 
-  # Copy opt directory containing executables
-	provisioner "file" {
-    source = "opt/"
-		destination = "/opt/scylla"
-	}
-
   # Install dependecies needed for ycsb
+	provisioner "file" {
+    source = "opt/deps.sh"
+		destination = "/opt/scylla/deps.sh"
+	}
+  
   provisioner "remote-exec" {
     inline = [
       "sudo /opt/scylla/deps.sh &"
     ]
   }
 
+  # Copy opt directory containing executables
+	provisioner "file" {
+    source = "opt/"
+		destination = "/opt/scylla"
+	}
 }
 
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
