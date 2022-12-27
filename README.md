@@ -12,6 +12,8 @@
 2. Do benchmarking (see #Benchmarking DynamoDB or #Benchmarking Alternator)
 3. Run `terraform destroy` when you're done with the instances and table
 
+TODO: add info about -var-file and cloud token
+
 # Benchmarking DynamoDB
 
 0. Optionally adjust values in `variables.tf` and `basic-dynamodb-table` resource in main.tf

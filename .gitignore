@@ -32,3 +32,5 @@ private_key
 
 # For now don't commit lock
 .terraform.lock.hcl
+
+*.tfvars

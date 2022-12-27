@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.16"
     }
+    # For now not published in the registry, see create-tf-rc-file.sh.
+    scylladbcloud = {
+      source  = "registry.terraform.io/scylladb/scylladbcloud"
+    }
   }
 
   required_version = ">= 1.2.0"
@@ -12,6 +16,12 @@ terraform {
 provider "aws" {
   region                   = var.aws_region
   shared_credentials_files = ["$HOME/.aws/credentials"]
+  default_tags {
+    tags = {
+      Owner = "Benchmarking"
+      RunByUser = "Benchmarking"
+    }
+  }
 }
 
 # Name of the key pair containing private SSH key
@@ -55,45 +65,87 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+# This is the VPC for loaders
+resource "aws_vpc" "loader_vpc" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "default"
+}
+
+resource "aws_internet_gateway" "loader_igw" {
+	vpc_id = aws_vpc.loader_vpc.id
+}
+
+resource "aws_route_table" "main_rt" {
+	vpc_id = aws_vpc.loader_vpc.id
+}
+
+resource "aws_route" "internet_rt" {
+  route_table_id            = aws_route_table.main_rt.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.loader_igw.id
+}
+
+resource "aws_security_group" "public_sg" {
+  name = "benchmarking-sg-${random_string.key_name.result}"
+  description = "Allows to reach loaders from the Internet"
+  vpc_id      = aws_vpc.loader_vpc.id
+
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  # depends_on = [
+  #   aws_vpc.loader_vpc
+  # ]
+}
+
+# Subnet for each loader (needs to be per AZ)
+resource "aws_subnet" "loader_subnet" {
+  cidr_block = format("10.0.%d.0/24", count.index)
+  availability_zone = element(var.loader_avaliability_zones, count.index)
+  vpc_id = aws_vpc.loader_vpc.id
+  map_public_ip_on_launch = true # auto assigns public IPs, needed to be able to SSH to the loader instances
+
+  count = var.loader_instances_count
+  depends_on = [aws_internet_gateway.loader_igw]
+}
+
+# This links route table to subnet
+resource "aws_route_table_association" "main_rt_assoc" {
+	route_table_id = aws_route_table.main_rt.id
+	subnet_id = element(aws_subnet.loader_subnet.*.id, count.index)
+
+	count = var.loader_instances_count
+}
+
 # Instances which run ycsb
 resource "aws_instance" "loader" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.loader_instance_type
   key_name = random_string.key_name.result
 
-  count = var.loader_instances_count
+  subnet_id = element(aws_subnet.loader_subnet.*.id, count.index)
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
 
-  availability_zone = element(var.loader_avaliability_zones, count.index)
+  count = var.loader_instances_count
 
   tags = {
     Name = "Loader"
-    Owner = "Benchmarking"
     NodeType = "loader"
   }
 
-  iam_instance_profile = aws_iam_instance_profile.dynamo_profile.name
-}
-
-resource "aws_iam_role" "dynamo_role" {
-  name               = "dynamo_role"
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"]
-  assume_role_policy = data.aws_iam_policy_document.dynamo_policy.json
-}
-
-resource "aws_iam_instance_profile" "dynamo_profile" {
-  name = "dynamo_profile"
-  role = aws_iam_role.dynamo_role.name
-}
-
-data "aws_iam_policy_document" "dynamo_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
+  iam_instance_profile = var.dynamo_testing ? aws_iam_instance_profile.dynamo_profile[0].name : null
 }
 
 # This runs provisioning steps
@@ -102,7 +154,7 @@ resource "null_resource" "loader" {
   triggers = {
     loader_instance_ids = join(",", aws_instance.loader.*.id)
     # Use code below to force recreating null_resource
-    always_run = "${timestamp()}"
+    # always_run = "${timestamp()}"
   }
 
   count = var.loader_instances_count
@@ -140,22 +192,4 @@ resource "null_resource" "loader" {
     source = "opt/"
 		destination = "/opt/scylla"
 	}
-}
-
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  count = var.create_dynamo_table ? 1 : 0
-  name     = "usertable"
-  hash_key = "p"
-  attribute {
-    name = "p"
-    type = "S"
-  }
-
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1000
-  write_capacity = 1000
-
-  tags = {
-    Owner = "Benchmarking"
-  }
 }
