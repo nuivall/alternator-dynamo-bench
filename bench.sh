@@ -74,6 +74,8 @@ do
         for mult in `seq $MULT`
         do
             let ++i
+            ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_access_key_id 123123
+            ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_secret_access_key 123123
             # For description of the following options, see
             # https://github.com/brianfrankcooper/YCSB/blob/master/dynamodb/conf/dynamodb.properties
             # NOTE: YCSB currently has two modes - "HASH" - with single-row
