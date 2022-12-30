@@ -1,0 +1,3 @@
+[submodule "terraform-provider-scylladbcloud"]
+	path = terraform-provider-scylladbcloud
+	url = git@github.com:nuivall/terraform-provider-scylladbcloud.git
