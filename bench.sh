@@ -40,8 +40,9 @@ echo "Keeping stats in ${TMPDIR}"
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-# TODO: add support for alternator
-nodes=(a b c)
+nodes_json=(`terraform output -json cluster_private_ips`)
+readarray -t nodes < <(jq -r '.[]' <<<"$nodes_json")
+declare -p nodes
 
 # Number of YCSB loaders to use per loader/server combination.
 # In other words, each loader will run MULT*nservers ycsb processes, and each
@@ -58,24 +59,40 @@ else
     target=
 fi
 
+for loader in ${loaders[@]}
+do
+    # bogus
+    ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_access_key_id 123123
+    ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_secret_access_key 123123
+done
+
+# ${SCRIPTPATH}/ec2-ssh ${loaders[0]} -- aws dynamodb create-table \
+#     --endpoint-url http://${nodes[0]}:8000 \
+#     --table-name usertable \
+#     --attribute-definitions \
+#         AttributeName=p,AttributeType=S \
+#     --key-schema \
+#         AttributeName=p,KeyType=HASH \
+#     --billing-mode PAY_PER_REQUEST \
+#     --tags Key=system:write_isolation,Value=$isolation || true
+
 typeset -i i=0
 for loader in ${loaders[@]}
 do
     for node in ${nodes[@]}
     do
-        case $aws in
-        "") # Scylla:
-            endpoint=http://$node:8080
-            ;;
-        *)  # AWS:
-            endpoint=http://dynamodb.$aws.amazonaws.com
-            ;;
-        esac
+        # case $aws in
+        # "") # Scylla:
+        #     endpoint=http://$node:8000
+        #     ;;
+        # *)  # AWS:
+        #     endpoint=http://dynamodb.$aws.amazonaws.com
+        #     ;;
+        # esac
+        endpoint=http://$node:8000
         for mult in `seq $MULT`
         do
             let ++i
-            ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_access_key_id 123123
-            ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_secret_access_key 123123
             # For description of the following options, see
             # https://github.com/brianfrankcooper/YCSB/blob/master/dynamodb/conf/dynamodb.properties
             # NOTE: YCSB currently has two modes - "HASH" - with single-row
@@ -108,6 +125,7 @@ do
         done
     done
 done
+
 
 # Wait for all the loaders started above to finish.
 # TODO: catch interrupt and kill all the loaders.
