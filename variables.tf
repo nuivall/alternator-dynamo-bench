@@ -24,6 +24,7 @@ variable "loader_instances_count" {
 
 # This should be on when testing dynamoDB and off when testing scylla alternator.
 variable "dynamo_testing" {
+	type = bool
 }
 
 # Provisioned write capacity for dynamoDB.
@@ -39,6 +40,7 @@ variable "dynamo_rcu" {
 # This is API token for Scylla Cloud account needed to create managed alternator cluster.
 # Can be empty string when testing only dynamoDB.
 variable "scylla_cloud_token" {
+	type = string
 	sensitive = true
 }
 
