@@ -1,5 +1,5 @@
 provider "scylladbcloud" {
-  endpoint = "https://api.cloud.scylladb.com"
+  # endpoint = "https://api.cloud.scylladb.com"
   token = var.scylla_cloud_token
 }
 
