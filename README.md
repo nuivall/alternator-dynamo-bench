@@ -11,14 +11,13 @@ This is needed for first the usage only.
 5. Run `git submodule update` in repository root directory to fetch scylla terraform provider
 6. Run `go build` in terraform-provider-scylladbcloud submodule directory to build it
 7. Run `./create-tf-rc-file.sh` in repository root directory, adjust `local_scylla_provider_directory` path inside the script first! (TODO: automate this)
-8. Get API auth token for your account from SCylla Cloud support team.
+8. Get API auth token for your account from Scylla Cloud support team.
 
 # How to provision
 
 1. Run `terraform apply -auto-approve` in repository root directory
-2. You'll be hit by https://github.com/scylladb/terraform-provider-scylladbcloud/issues/32, but don't worry and call `terraform apply -auto-approve` again, terraform can handle that!
-3. Do benchmarking
-4. Run `terraform destroy -auto-approve` when you're done with the instances and table
+2. Do benchmarking
+3. Run `terraform destroy -auto-approve` when you're done with the instances and table
 
 # Benchmarking
 
