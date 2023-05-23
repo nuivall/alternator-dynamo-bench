@@ -154,7 +154,7 @@ resource "null_resource" "loader" {
   triggers = {
     loader_instance_ids = join(",", aws_instance.loader.*.id)
     # Use code below to force recreating null_resource
-    # always_run = "${timestamp()}"
+    always_run = "${timestamp()}"
   }
 
   count = var.loader_instances_count

@@ -14,8 +14,8 @@ variable "loader_avaliability_zones" {
 }
 
 variable "loader_instance_type" {
-  default = "t3.micro"
-  #default = "c5.2xlarge"
+  #default = "t3.micro"
+  default = "c5.2xlarge"
 }
 
 variable "loader_instances_count" {
@@ -46,13 +46,13 @@ variable "scylla_cloud_token" {
 
 # Instance type for alternator cluster, i4i family is recommended for real benchmarks.
 variable "scylla_cloud_node_type" {
-	default = "t3.micro"
-	#default = "i4i.2xlarge"
+	#default = "t3.micro"
+	default = "i4i.2xlarge"
 }
 
 # This is version needs to be updated to the desired version (typicially latest available).
 variable "scylla_cloud_version" {
-	default = "2022.1.3"
+	default = "2022.2.6"
 	# default = "5.1.1"
 }
 

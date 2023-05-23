@@ -66,15 +66,15 @@ do
     ${SCRIPTPATH}/ec2-ssh $loader aws configure set aws_secret_access_key 123123
 done
 
-# ${SCRIPTPATH}/ec2-ssh ${loaders[0]} -- aws dynamodb create-table \
-#     --endpoint-url http://${nodes[0]}:8000 \
-#     --table-name usertable \
-#     --attribute-definitions \
-#         AttributeName=p,AttributeType=S \
-#     --key-schema \
-#         AttributeName=p,KeyType=HASH \
-#     --billing-mode PAY_PER_REQUEST \
-#     --tags Key=system:write_isolation,Value=$isolation || true
+${SCRIPTPATH}/ec2-ssh ${loaders[0]} -- aws dynamodb create-table \
+    --endpoint-url http://${nodes[0]}:8000 \
+    --table-name usertable \
+    --attribute-definitions \
+        AttributeName=p,AttributeType=S \
+    --key-schema \
+        AttributeName=p,KeyType=HASH \
+    --billing-mode PAY_PER_REQUEST \
+    --tags Key=system:write_isolation,Value=$isolation || true
 
 typeset -i i=0
 for loader in ${loaders[@]}
